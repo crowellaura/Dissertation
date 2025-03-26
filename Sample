@@ -1,0 +1,38 @@
+#The following code will depend on the pathway for the file being imported
+
+df = pd.read_csv('sample.csv')
+print(df)
+
+# Calculating totals from column values from direct requirements matrix
+def column_totals(data):
+    data = data.drop(data.columns[0], axis=1)
+    totals = data.sum(axis=0, skipna= True)
+    column_list = [j for i,j in enumerate(totals)]
+    return column_list
+​
+#Tells us the total expenditures per sector
+totals = column_totals(df)
+df.drop(index=df.index[-1:], axis = 0, inplace= True)
+
+#Returning the technical coefficients matrix
+def tcm(data):
+    data = data.drop(columns="Sectors")
+    data = pd.DataFrame(data).to_numpy()
+    data = data.tolist()
+    new_list = []
+    for row in data:
+        new_row = [i/j for i,j in zip(row,totals)]
+        new_list.append(new_row)
+    new_array = np.array(new_list)
+    return new_array
+tcm_df = tcm(df)   
+
+#Obtaining the multiplier matrix from the TCM matrix
+def multiplier(data):
+    identity = np.identity(len(data))
+    pre = identity - data
+    matrix = np.linalg.inv(pre)
+    return matrix
+mult = multiplier(tcm_df)
+total_mult = np.sum(mult, axis = 0)
+print(mult, total_mult)
